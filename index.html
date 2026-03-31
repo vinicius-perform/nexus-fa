@@ -4,20 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>fa-nexus</title>
-    <script>
-      // Clear service workers from previous projects (e.g., barberhub)
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(registrations => {
-          for (const registration of registrations) {
-            registration.unregister().then(() => {
-              console.log('Service Worker unregistered: ', registration);
-              window.location.reload();
-            });
-          }
-        });
-      }
-    </script>
+    <title>FA Nexus | Fazendo Acontecer</title>
   </head>
   <body>
     <div id="root"></div>

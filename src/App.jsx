@@ -12,7 +12,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 function AppContent() {
   const { activeRole, setActiveRole, loading, setLoading, isGuest, setIsGuest, toggleRoleVisibility, roles } = useAppContext();
-  const [showPreloader, setShowPreloader] = useState(true);
+  const [showPreloader, setShowPreloader] = useState(false);
+
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isAuthenticated, setIsAuthenticated] = useState(() => {

@@ -7,14 +7,25 @@ import { getFullPipelineData } from '../lib/pipelineService';
 
 export const AppProvider = ({ children }) => {
   const [roles, setRoles] = useState(() => {
-    const saved = localStorage.getItem('fa_nexus_roles');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('fa_nexus_roles');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error('NEXUS: Error parsing fa_nexus_roles', e);
+      return [];
+    }
   });
 
   const [pipelines, setPipelines] = useState(() => {
-    const saved = localStorage.getItem('fa_nexus_pipelines');
-    return saved ? JSON.parse(saved) : {};
+    try {
+      const saved = localStorage.getItem('fa_nexus_pipelines');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      console.error('NEXUS: Error parsing fa_nexus_pipelines', e);
+      return {};
+    }
   });
+
 
   const [activeRole, setActiveRole] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +48,14 @@ export const AppProvider = ({ children }) => {
           });
 
           // Mesclar o cache de progresso local (completedTasks) mantendo a estrutura atualizada
-          const savedPipelines = JSON.parse(localStorage.getItem('fa_nexus_pipelines') || '{}');
+          let savedPipelines = {};
+          try {
+            const savedStr = localStorage.getItem('fa_nexus_pipelines');
+            savedPipelines = savedStr ? JSON.parse(savedStr) : {};
+          } catch (e) {
+            console.error('NEXUS: Error parsing fa_nexus_pipelines in fetchRemoteData', e);
+          }
+
           Object.keys(newPipelines).forEach(roleId => {
             newPipelines[roleId] = newPipelines[roleId].map((stage, idx) => {
               const savedStage = savedPipelines[roleId]?.[idx];
@@ -72,7 +90,7 @@ export const AppProvider = ({ children }) => {
 
   const toggleRoleVisibility = async (roleId) => {
     const updatedRoles = roles.map(r => 
-      r.id === roleId ? { ...r, is_active: !r.isActive && !r.is_active } : r
+      r.id === roleId ? { ...r, is_active: !r.is_active } : r
     );
     setRoles(updatedRoles);
     
