@@ -80,6 +80,32 @@ const ChecklistManager = () => {
     return Math.round((completed / total) * 100);
   };
 
+  const getActiveDays = (createdAt) => {
+    const start = new Date(createdAt);
+    const now = new Date();
+    const diffTime = Math.abs(now - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays <= 0) return "Criado hoje";
+    if (diffDays === 1) return "Ativo há 1 dia";
+    return `Ativo há ${diffDays} dias`;
+  };
+
+  const calculateAverageCompletion = () => {
+    const completedChecklists = checklists.filter(c => calculateProgress(c) === 100);
+    if (completedChecklists.length === 0) return null;
+
+    const totalDays = completedChecklists.reduce((acc, c) => {
+      const start = new Date(c.created_at);
+      const end = new Date(c.updated_at);
+      const diffTime = Math.abs(end - start);
+      return acc + (diffTime / (1000 * 60 * 60 * 24));
+    }, 0);
+
+    const avg = totalDays / completedChecklists.length;
+    return avg.toFixed(1);
+  };
+
   if (view === 'create') {
     return <ChecklistCreator onBack={handleBackToList} onSuccess={handleBackToList} />;
   }
@@ -87,6 +113,8 @@ const ChecklistManager = () => {
   if (view === 'view') {
     return <ChecklistViewer checklistId={selectedChecklist?.public_id} onBack={handleBackToList} />;
   }
+
+  const avgCompletion = calculateAverageCompletion();
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -96,13 +124,34 @@ const ChecklistManager = () => {
           <h2 className="text-4xl font-black text-white mb-4 tracking-tight">Gestão de Checklists</h2>
           <p className="text-text-secondary max-w-xl">Crie e gerencie checklists estruturados. Compartilhe o link público para que sua equipe possa marcar tarefas em tempo real.</p>
         </div>
-        <button 
-          onClick={handleCreateNew}
-          className="flex items-center gap-2 px-6 py-4 bg-accent text-black font-bold rounded-2xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(34,197,94,0.2)]"
-        >
-          <Icons.Plus size={20} />
-          Criar Novo Checklist
-        </button>
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 flex flex-col justify-center">
+             <span className="text-[10px] uppercase tracking-widest text-text-secondary font-bold mb-1">Média de Conclusão</span>
+             <div className="flex items-center gap-2">
+                <Icons.Zap size={16} className="text-accent" />
+                <span className="text-xl font-black text-white">{avgCompletion ? `${avgCompletion} dias` : '--'}</span>
+             </div>
+          </div>
+          <button 
+            onClick={() => {
+              const url = `${window.location.origin}/public-checklists`;
+              navigator.clipboard.writeText(url);
+              alert('Link do Portal Público copiado!');
+            }}
+            className="flex items-center gap-2 px-6 py-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold rounded-2xl transition-all"
+          >
+            <Icons.ExternalLink size={20} />
+            Link de Visão Geral
+          </button>
+
+          <button 
+            onClick={handleCreateNew}
+            className="flex items-center gap-2 px-6 py-4 bg-accent text-black font-bold rounded-2xl hover:scale-105 transition-all shadow-[0_0_20px_rgba(34,197,94,0.2)]"
+          >
+            <Icons.Plus size={20} />
+            Criar Novo Checklist
+          </button>
+        </div>
       </header>
 
       {loading ? (
@@ -132,6 +181,7 @@ const ChecklistManager = () => {
           <AnimatePresence>
             {checklists.map((item, idx) => {
               const progress = calculateProgress(item);
+              const activeDays = getActiveDays(item.created_at);
               return (
                 <motion.div
                   key={item.id}
@@ -164,10 +214,17 @@ const ChecklistManager = () => {
                     </div>
                   </div>
                   
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-accent transition-colors line-clamp-1">{item.name}</h3>
-                  <div className="flex items-center gap-2 text-xs text-text-secondary mb-8">
-                     <Icons.Calendar size={14} />
-                     {new Date(item.created_at).toLocaleDateString('pt-BR')}
+                  <h3 className="text-xl font-bold text-white mb-1 group-hover:text-accent transition-colors line-clamp-1">{item.name}</h3>
+                  
+                  <div className="flex flex-col mb-8">
+                     <div className="flex items-center gap-2 text-[10px] font-bold text-text-secondary uppercase tracking-widest">
+                        <Icons.Calendar size={12} />
+                        {new Date(item.created_at).toLocaleDateString('pt-BR')}
+                     </div>
+                     <div className="flex items-center gap-2 text-[10px] font-bold text-accent/60 uppercase tracking-widest mt-1">
+                        <Icons.Clock size={12} />
+                        {activeDays}
+                     </div>
                   </div>
 
                   <div className="mt-auto">
@@ -192,6 +249,7 @@ const ChecklistManager = () => {
       )}
     </div>
   );
+
 };
 
 export default ChecklistManager;

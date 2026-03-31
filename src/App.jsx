@@ -6,6 +6,7 @@ import Pipeline from './components/Pipeline';
 import AdminPanel from './components/AdminPanel';
 import Login from './components/Login';
 import PublicChecklist from './components/PublicChecklist';
+import PublicChecklistOverview from './components/PublicChecklistOverview';
 import MainLayout from './components/MainLayout';
 import { Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +21,7 @@ function AppContent() {
     return localStorage.getItem('fa_nexus_auth') === 'true';
   });
   const [publicChecklistId, setPublicChecklistId] = useState(null);
+  const [isOverviewMode, setIsOverviewMode] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
@@ -31,10 +33,13 @@ function AppContent() {
       setIsGuest(true);
     }
     
-    // Check for public checklist route
-    if (window.location.pathname.startsWith('/c/')) {
-        const id = window.location.pathname.split('/c/')[1];
+    // Check for public checklist routes
+    const path = window.location.pathname;
+    if (path.startsWith('/c/')) {
+        const id = path.split('/c/')[1];
         if (id) setPublicChecklistId(id);
+    } else if (path === '/public-checklists') {
+        setIsOverviewMode(true);
     }
   }, [isAuthenticated]);
 
@@ -54,8 +59,8 @@ function AppContent() {
     setActiveTab('dashboard');
   };
 
-  // If viewing a public checklist, ignore authentication and roles
-  if (publicChecklistId) {
+  // If viewing a public checklist or overview, ignore authentication and roles
+  if (publicChecklistId || isOverviewMode) {
     return (
       <div className="min-h-screen bg-[#0B0F0D] text-white">
         <AnimatePresence>
@@ -63,7 +68,9 @@ function AppContent() {
             <Preloader onFinish={() => setShowPreloader(false)} />
           )}
         </AnimatePresence>
-        {!showPreloader && <PublicChecklist publicId={publicChecklistId} />}
+        {!showPreloader && (
+          isOverviewMode ? <PublicChecklistOverview /> : <PublicChecklist publicId={publicChecklistId} />
+        )}
       </div>
     );
   }
@@ -107,19 +114,7 @@ function AppContent() {
             </motion.div>
           </AnimatePresence>
           
-          {/* Admin Toggle button - positioned fixed for easy access */}
-          {!isGuest && !isAdminOpen && (
-            <div className="fixed bottom-10 right-10 z-50">
-               <motion.button 
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsAdminOpen(true)}
-                className="w-14 h-14 bg-white/5 hover:bg-accent backdrop-blur-xl border border-white/10 rounded-full flex items-center justify-center text-white/50 hover:text-black transition-all shadow-2xl group"
-              >
-                <Settings size={28} />
-              </motion.button>
-            </div>
-          )}
+          {/* Admin Mode is now accessed only via internal logic if needed, gear button removed as requested */}
 
           <AnimatePresence>
             {isAdminOpen && (
@@ -182,4 +177,3 @@ function App() {
 }
 
 export default App;
-
